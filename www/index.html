@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Temperature monitor site</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=10,IE=9,IE=8,IE=edge" />
+	<meta name="viewport" content="width=device-width, user-scalable=no">
+
+	<style>
+		details {
+			margin-top: 20px;
+		}
+	</style>
+	
+	<script src="/js/jquery.min.js"></script>
+	<script src="/js/all.js"></script>
+</head>
+<body>
+	<h2>List of device temperatures</h2>
+	<div id="readings"></div>
+	<br/>
+	<a href="/tempmonitor/AhkDeviceMonitor.zip">Download reporting tool (Windows)</a>
+
+	<script>
+
+	var lastReadings = [];
+
+	function inIframe () {
+	    try {
+	        return window.self !== window.top;
+	    } catch (e) {
+	        return true;
+	    }
+	}
+
+	if(inIframe())
+		$("h2").hide();
+
+	function refreshReadings(){
+		request({module: "tempmonitor", type: "GetReadings"}, function(res){
+			
+			if($(lastReadings).not(res).length == 0 && $(res).not(lastReadings).length == 0)
+				return;
+
+			lastReadings = res;
+
+			$("#readings").empty();		
+			for(var i = 0; i < res.length; i++){
+				var reading = $("<details open/>");
+
+				var head = $("<summary/>", {});
+				head.html(res[i].deviceName);
+				reading.append(head);		
+
+				var body = $("<div/>", {style: "white-space: pre-wrap"});
+				body.append(res[i].readingText);
+				reading.append(body);			
+
+				$("#readings").append(reading);
+			}
+		});
+	}
+
+	$(function(){
+		refreshReadings();
+		setInterval(function(){
+			refreshReadings();
+		}, 3000);
+	});
+
+
+	</script>
+</body>
+</html>
